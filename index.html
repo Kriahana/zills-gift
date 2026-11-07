@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A little birthday surprise ♡</title>
+<style>
+:root{
+  --rose:#D8B9AD; --rose-deep:#c69a8c; --cream:#FFF8ED; --cream-2:#FFFDF7;
+  --ink:#5E3A39; --ink-soft:#745556; --pink:#EFC5C1; --teal:#69B5C1; --teal-deep:#488f97; --gold:#D6B85E;
+  --line:#ead9cb; --shadow:0 20px 60px rgba(94,58,57,.16);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; color:var(--ink); font:16px/1.6 "Trebuchet MS","Segoe UI",Arial,sans-serif;
+  background:
+    radial-gradient(ellipse at 12% 6%, rgba(245,221,209,.85), transparent 46%),
+    radial-gradient(ellipse at 90% 100%, rgba(239,197,193,.5), transparent 50%),
+    var(--rose);
+  min-height:100vh;
+}
+body.dragging{user-select:none;-webkit-user-select:none;cursor:grabbing}
+.wrap{min-height:100vh;display:grid;place-items:center;padding:24px 18px}
+.card{
+  width:min(100%,980px);padding:clamp(22px,4.5vw,48px);border-radius:28px;
+  background:linear-gradient(180deg,var(--cream-2),var(--cream));
+  border:1px solid #f3e3d3;box-shadow:var(--shadow);position:relative;
+}
+.screen{display:none}
+.screen.active{display:block;animation:in .38s ease both}
+.center{text-align:center}
+.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;color:var(--teal-deep);font-weight:700;margin-bottom:6px}
+h1,h2{font-family:Georgia,"Times New Roman",serif;line-height:1.1;margin:.25em 0}
+h1{font-size:clamp(2.2rem,6vw,3.8rem)}
+h2{font-size:clamp(1.7rem,4.4vw,2.6rem)}
+p{color:var(--ink-soft)}
+.btn{
+  border:0;border-radius:999px;background:var(--ink);color:#fff;padding:13px 26px;
+  font:600 1rem/1.2 "Trebuchet MS","Segoe UI",Arial,sans-serif;cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  box-shadow:0 6px 16px rgba(94,58,57,.22);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(94,58,57,.28)}
+.btn:active{transform:translateY(0)}
+.btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.btn.secondary{background:#ecdbc9;color:var(--ink);box-shadow:none}
+.btn.secondary:hover{background:#e6d0ba}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* welcome */
+.badge{
+  width:clamp(150px,32vw,190px);aspect-ratio:1;margin:14px auto 18px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#fbeedd,#f1d7c3);
+  box-shadow:inset 0 0 0 3px #fff8,0 12px 30px rgba(94,58,57,.18);
+  display:grid;place-items:center;position:relative;
+  border:2px solid var(--gold);
+}
+.badge .num{font:700 clamp(3.4rem,12vw,4.8rem)/1 Georgia,serif;color:var(--ink)}
+.badge .sub{position:absolute;bottom:16%;left:0;right:0;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:#a4766a}
+.badge::before,.badge::after{content:"✦";position:absolute;color:var(--gold);font-size:1.3rem}
+.badge::before{top:6%;left:16%}
+.badge::after{bottom:10%;right:14%}
+.welcome-note{margin-top:18px;font-size:.82rem;color:#a4766a}
+
+/* quiz */
+.qmeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 4px;font-size:.8rem;color:#9a6f6c}
+.progress,.game-progress{height:9px;background:#efe0d2;border-radius:9px;overflow:hidden;margin:8px 0 20px}
+.progress i,.game-progress i{height:100%;display:block;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .3s ease}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.answer{
+  padding:16px 18px;border:1.5px solid var(--line);border-radius:16px;background:#fffdf8;
+  text-align:left;font-size:1rem;color:var(--ink);cursor:pointer;transition:transform .12s ease,border-color .12s,background .12s;
+}
+.answer:hover{transform:translateY(-2px);border-color:#d3a88f}
+.answer.selected{background:#f7e7dc;border-color:#b78667}
+.answer:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.feedback{min-height:26px;color:#a05d61;font-style:italic;font-family:Georgia,serif;margin-bottom:6px}
+.btnrow{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+
+/* wish */
+.textarea{
+  width:100%;min-height:150px;padding:16px;border:1.5px solid var(--line);border-radius:14px;
+  background:#fffdf8;font:italic 1.15rem/1.55 Georgia,serif;resize:vertical;color:var(--ink);
+}
+.textarea:focus{outline:3px solid var(--teal);outline-offset:1px}
+.textarea.shake{animation:shake .3s}
+.privacy{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.choice{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;border:1.5px solid var(--line);
+  border-radius:14px;background:#fffdf8;cursor:pointer;
+}
+.choice input{accent-color:var(--teal)}
+.choice:has(input:checked){border-color:#b78667;background:#f7e7dc}
+.note{font-size:.83rem;color:#a4766a;max-width:520px;margin:14px auto 0}
+
+/* sealed */
+.seal-art{
+  width:88px;height:88px;margin:10px auto 14px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#e9a9a0,#c9766e);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.45),0 10px 22px rgba(94,58,57,.2);
+  display:grid;place-items:center;color:#fff;font-size:2rem;position:relative;
+}
+.seal-art::after{content:"";position:absolute;inset:-7px;border:1.5px dashed var(--gold);border-radius:50%}
+.screen.active .seal-art{animation:seal .7s ease}
+
+/* game */
+.gamehead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.gamehead h2{margin:0 0 2px}
+.game-controls{display:flex;gap:8px;flex-wrap:wrap}
+.gamesub{margin:6px 0 14px}
+.stage{position:relative;width:100%;background:
+  radial-gradient(rgba(185,146,121,.22) 1px,transparent 1px),
+  linear-gradient(145deg,#f6e6d8,#ecd6c4);
+  background-size:18px 18px,auto;border-radius:22px;margin:14px 0;
+  box-shadow:inset 0 2px 6px rgba(255,255,255,.6),0 10px 26px rgba(94,58,57,.1);
+}
+.stage::before{
+  content:"the tabletop";position:absolute;left:16px;top:10px;z-index:1;
+  font:700 .62rem/1 "Trebuchet MS",Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#98716c;
+}
+.board{
+  position:absolute;z-index:2;border-radius:8px;overflow:hidden;background:#e9d8c8;
+  box-shadow:0 0 0 8px #fff3e2,0 0 0 9px #c99f7c,0 18px 36px rgba(94,58,57,.18);
+}
+.board .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;opacity:.11;pointer-events:none}
+.board .slots{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.slot{fill:transparent;stroke:#a98a76;stroke-width:1.6;stroke-dasharray:3.5 3;vector-effect:non-scaling-stroke}
+.slot.done{opacity:0;transition:opacity .3s}
+.slot.hint{stroke:var(--gold);stroke-width:3;stroke-dasharray:0;animation:hintpulse .9s ease}
+.tray{
+  position:absolute;z-index:1;border:2px dashed #d3b39b;border-radius:16px;
+  background:rgba(255,252,245,.45);pointer-events:none;
+}
+.tray-label{
+  position:absolute;left:12px;top:8px;font:700 .64rem/1 "Trebuchet MS",Arial,sans-serif;
+  letter-spacing:.16em;text-transform:uppercase;color:#896663;
+}
+.piece{position:absolute;z-index:5;touch-action:none;cursor:grab;will-change:left,top,width,height;
+  filter:drop-shadow(1px 5px 4px rgba(94,58,57,.35));transition:filter .15s ease}
+.piece svg{display:block;width:100%;height:100%;overflow:visible}
+.piece .cut{fill:none;stroke:rgba(255,248,238,.95);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
+.piece:hover{filter:drop-shadow(0 0 9px rgba(214,184,94,.8)) drop-shadow(1px 5px 4px rgba(94,58,57,.35))}
+.piece.dragging{z-index:50;cursor:grabbing;filter:drop-shadow(0 14px 20px rgba(94,58,57,.42))}
+.piece.placed{cursor:default;pointer-events:none;z-index:3;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
+.piece.placed .cut{stroke:rgba(255,248,238,.55)}
+.piece.returning{transition:left .24s cubic-bezier(.2,.8,.25,1),top .24s cubic-bezier(.2,.8,.25,1),width .24s ease,height .24s ease}
+.piece.pop{animation:pop .32s ease}
+.piece.hint{animation:hintpulse .9s ease}
+.gamefoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;background:#f4e8dd;border-radius:12px;color:#795957;font-weight:600}
+.gamefoot #count{white-space:nowrap}
+.gamefoot #hintmsg{color:#9a6f6c;font-weight:400}
+
+/* final */
+.finalart-wrap{
+  display:inline-block;background:#fff;padding:12px 12px 46px;border-radius:6px;margin:12px auto 22px;
+  box-shadow:0 18px 40px rgba(94,58,57,.22);transform:rotate(-1.6deg);position:relative;
+}
+.finalart{display:block;width:min(100%,340px);max-width:64vw;border-radius:3px;object-fit:contain;max-height:46vh}
+.finalart-wrap::before{content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%) rotate(-3deg);width:86px;height:26px;background:rgba(214,184,94,.5);border-radius:2px}
+.finalart-wrap::after{content:"eighteen ✦";position:absolute;left:0;right:0;bottom:12px;text-align:center;font:italic .95rem Georgia,serif;color:#8a6a5f}
+.letter{text-align:left;max-width:620px;margin:20px auto 0}
+.letter p{margin:.7em 0}
+.letter p:first-child{font-size:1.12rem;color:var(--ink)}
+.signoff{margin-top:1.2em!important}
+.spark{position:fixed;top:-40px;color:#fff8dc;pointer-events:none;font-size:1rem;z-index:99;animation:fall linear forwards}
+
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes seal{0%{transform:scale(.6) rotate(-8deg);opacity:0}60%{transform:scale(1.06) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.09)}100%{transform:scale(1)}}
+@keyframes hintpulse{0%,100%{filter:drop-shadow(0 0 0 rgba(214,184,94,0))}50%{filter:drop-shadow(0 0 12px rgba(214,184,94,.95))}}
+@keyframes fall{
+  0%{transform:translateY(-40px) rotate(0)}100%{transform:translateY(105vh) rotate(720deg)}
+}
+
+@media(max-width:640px){
+  .wrap{padding:12px 10px}
+  .card{padding:24px 16px;border-radius:22px}
+  .answers{grid-template-columns:1fr}
+  .gamehead{align-items:flex-start}
+  .stage::before{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="card">
+
+  <!-- WELCOME -->
+  <div id="welcome" class="screen active center">
+    <div class="eyebrow">A tiny birthday adventure</div>
+    <div class="badge" aria-hidden="true"><span class="num">18</span><span class="sub">a little older</span></div>
+    <h1>Well, someone's getting older today!</h1>
+    <p>Before you get your present, there's a little something you need to do…</p>
+    <button class="btn" id="startBtn" type="button">Let's begin ♡</button>
+    <p class="welcome-note">made with love, just for you</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="screen center">
+    <div class="eyebrow">A very important investigation</div>
+    <h2 id="qtitle"></h2>
+    <div class="qmeta"><span id="qcount"></span><span>pick one — there are no wrong answers</span></div>
+    <div class="progress"><i id="qbar"></i></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="btnrow">
+      <button class="btn secondary" id="backq" type="button">← Back</button>
+      <button class="btn" id="nextq" type="button" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- WISH -->
+  <div id="wish" class="screen center">
+    <div class="eyebrow">A little moment for you</div>
+    <h2>Before we reveal your present, make a wish.</h2>
+    <p>Anything you want. Big, small, silly, impossible. You don't have to tell anyone. ♡</p>
+    <textarea id="wishtext" class="textarea" maxlength="1000" placeholder="Your wish can stay right here…"></textarea>
+    <div class="privacy">
+      <label class="choice"><input type="radio" name="share" value="private" checked> Keep it just for me</label>
+      <label class="choice"><input type="radio" name="share" value="share"> Share my wish with you two</label>
+    </div>
+    <p class="note">No online storage is connected. A shared wish stays on this device; a private wish isn't saved or sent.</p>
+    <button class="btn" id="sealBtn" type="button">Seal my wish ♡</button>
+  </div>
+
+  <!-- SEALED -->
+  <div id="sealed" class="screen center">
+    <div class="eyebrow">Wish safely tucked away</div>
+    <div class="seal-art" aria-hidden="true">♡</div>
+    <h2>Your wish is sealed ♡</h2>
+    <p id="sealedcopy"></p>
+    <button class="btn" id="openGameBtn" type="button">Open the birthday puzzle →</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="screen">
+    <div class="gamehead">
+      <div>
+        <div class="eyebrow">The birthday puzzle</div>
+        <h2>Put the picture together</h2>
+      </div>
+      <div class="game-controls">
+        <button class="btn secondary" id="hintBtn" type="button">Hint ✦</button>
+        <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </div>
+    <p class="gamesub">Drag each piece into place. You're so close!</p>
+    <div class="stage" id="stage">
+      <div class="board" id="board">
+        <img class="ghost" alt="" draggable="false">
+        <svg class="slots" id="slots" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="tray" id="tray"><span class="tray-label">Loose pieces</span></div>
+    </div>
+    <div class="game-progress"><i id="gamebar"></i></div>
+    <div class="gamefoot">
+      <span id="count">0 / 16 pieces</span>
+      <span id="hintmsg">Drag a piece onto its matching outline</span>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div id="final" class="screen center">
+    <div class="eyebrow">You did it!</div>
+    <h1>HAPPY 18TH BIRTHDAY!!</h1>
+    <div class="finalart-wrap"><img class="finalart" src="birthday-art.jpg" alt="The original birthday illustration"></div>
+    <div class="letter">
+      <p><b>Well, look at you! You put all the pieces together!</b></p>
+      <p>Eighteen already! A whole new chapter begins, and we hope it brings you countless reasons to smile, laugh until your stomach hurts, discover new things, and make memories you'll cherish forever.</p>
+      <p>It's funny how people can enter our lives from behind a screen and somehow become such a lovely part of them. We're really glad our paths crossed, and we're grateful to have you around.</p>
+      <p>We hope you never lose the little things that make you you. Keep being wonderfully yourself, keep chasing the things that make you happy, and don't forget that you deserve all the good things coming your way.</p>
+      <p>Here's to new adventures, questionable decisions, endless laughter, and many more birthdays!</p>
+      <p class="signoff">With lots of love,<br><b>Your two favourite internet nuisances ♡</b></p>
+    </div>
+    <button class="btn secondary" id="againBtn" type="button">Celebrate again</button>
+  </div>
+
+</section>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = (s, el) => (el||document).querySelector(s);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- screens ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  if(!reduceMotion) window.scrollTo({top:0, behavior:'smooth'}); else window.scrollTo(0,0);
+}
+
+/* ---------- quiz ---------- */
+const QUESTIONS = [
+  {q:"You've been granted one completely unreasonable superpower. What are you choosing?",
+   opts:["Invisibility","Teleportation","Reading minds","Unlimited money"],
+   reply:["Sneaky!","No commute ever again. Iconic.","Bold choice. We'll be careful what we think.","The most practical magic."]},
+  {q:"Your birthday cake has a secret inside. What do you hope it is?",
+   opts:["More cake","A lifetime supply of money","A surprise vacation","A tiny dragon"],
+   reply:["Cakeception. Excellent.","A financially responsible cake.","Pack your bags!","Correct answer. Name your dragon."]},
+  {q:"What's your ideal birthday?",
+   opts:["Staying home and relaxing","Going on an adventure","Spending time with favourite people","Absolute chaos"],
+   reply:["Cosy mode: activated.","Main character energy!","A very good choice.","We expected nothing less."]},
+  {q:"A mysterious door appears in front of you. Do you open it?",
+   opts:["Obviously!","Only after checking for traps","No, I'm not falling for that","Depends what's on the other side"],
+   reply:["Fearless. We respect it.","A sensible adventurer.","The door is a little offended.","Fair. Ask if it has snacks."]},
+  {q:"You can make one thing appear right now. What is it?",
+   opts:["A perfect slice of cake","A cute little puppy","A plane ticket anywhere","A day with zero responsibilities"],
+   reply:["A timeless classic.","Dangerously adorable.","Where are we going?","The dream, honestly."]}
+];
+let qi = 0, chosen = Array(5).fill(-1);
+const els = {
+  qtitle: $('#qtitle'), qcount: $('#qcount'), qbar: $('#qbar'), answers: $('#answers'),
+  feedback: $('#feedback'), backq: $('#backq'), nextq: $('#nextq')
+};
+function renderQ(){
+  const q = QUESTIONS[qi];
+  els.qtitle.textContent = q.q;
+  els.qcount.textContent = `${qi+1} / ${QUESTIONS.length}`;
+  els.qbar.style.width = `${((qi+1)/QUESTIONS.length)*100}%`;
+  els.answers.innerHTML = q.opts.map((o,i)=>`<button type="button" class="answer ${chosen[qi]===i?'selected':''}" data-i="${i}" aria-pressed="${chosen[qi]===i}">${o}</button>`).join('');
+  els.feedback.textContent = chosen[qi] >= 0 ? q.reply[chosen[qi]] : '';
+  els.nextq.disabled = chosen[qi] < 0;
+  els.nextq.textContent = qi === QUESTIONS.length-1 ? 'Make a wish →' : 'Next →';
+  els.backq.style.visibility = qi === 0 ? 'hidden' : 'visible';
+}
+els.answers.addEventListener('click', e => {
+  const b = e.target.closest('.answer'); if(!b) return;
+  chosen[qi] = +b.dataset.i; renderQ();
+});
+els.backq.addEventListener('click', () => { if(qi>0){ qi--; renderQ(); } else show('welcome'); });
+els.nextq.addEventListener('click', () => {
+  if(chosen[qi] < 0) return;
+  if(qi < QUESTIONS.length-1){ qi++; renderQ(); } else show('wish');
+});
+$('#startBtn').addEventListener('click', () => { show('quiz'); renderQ(); });
+
+/* ---------- wish ---------- */
+const WISH_KEY = 'birthdayWishForFriends';
+$('#sealBtn').addEventListener('click', () => {
+  const ta = $('#wishtext');
+  const v = ta.value.trim();
+  const share = document.querySelector('[name=share]:checked').value;
+  if(!v){
+    ta.classList.remove('shake'); void ta.offsetWidth; ta.classList.add('shake');
+    ta.focus(); return;
+  }
+  try{
+    if(share === 'share') localStorage.setItem(WISH_KEY, JSON.stringify({wish:v, createdAt:new Date().toISOString()}));
+    else localStorage.removeItem(WISH_KEY);
+  }catch(e){}
+  $('#sealedcopy').textContent = share === 'share'
+    ? 'Your wish is saved on this device for you to show your two friends. Let\u2019s uncover your surprise.'
+    : 'It belongs to you alone and hasn\u2019t been saved or sent anywhere. Keep it close, and let\u2019s uncover your surprise.';
+  show('sealed');
+});
+$('#wishtext').addEventListener('input', () => $('#wishtext').classList.remove('shake'));
+
+/* ---------- puzzle ---------- */
+const COLS = 4, ROWS = 4, TOTAL = COLS*ROWS;
+const ART_SRC = 'birthday-art.jpg';
+const art = new Image();
+art.src = ART_SRC;
+let ART_RATIO = 0.85575; // fallback (1145/1338); overwritten once loaded
+let built = false;
+
+const LW = 400;                       // logical board width
+let LH = LW / ART_RATIO;              // logical board height (matches image aspect)
+let LCW = LW / COLS, LCH = LH / ROWS;
+const PADK = 0.24;
+let PADX = LCW*PADK, PADY = LCH*PADK;
+
+const stage = $('#stage'), board = $('#board'), slotsEl = $('#slots'), trayEl = $('#tray');
+const countEl = $('#count'), barEl = $('#gamebar'), msgEl = $('#hintmsg');
+
+let pieces = [];
+let slotPaths = {};
+let geom = null;
+let drag = null;
+let rafId = null;
+let autoDir = 0;
+let lastPt = {x:0,y:0};
+
+function hSign(r,c){ return (r<=0 || r>=ROWS) ? 0 : (Math.sin((r*17+c*31)*43.17) > 0 ? 1 : -1); }
+function vSign(r,c){ return (c<=0 || c>=COLS) ? 0 : (Math.sin((r*29+c*13)*91.7) > 0 ? 1 : -1); }
+
+const KNOB = [
+  {t:'L', p:[0.34,0]},
+  {t:'C', c1:[0.345,0.02], c2:[0.355,0.06], p:[0.365,0.10]},
+  {t:'C', c1:[0.375,0.35], c2:[0.345,0.60], p:[0.315,0.80]},
+  {t:'C', c1:[0.30,0.95],  c2:[0.40,1.00],  p:[0.50,1.00]},
+  {t:'C', c1:[0.60,1.00],  c2:[0.70,0.95],  p:[0.685,0.80]},
+  {t:'C', c1:[0.655,0.60], c2:[0.625,0.35], p:[0.635,0.10]},
+  {t:'C', c1:[0.645,0.06], c2:[0.655,0.02], p:[0.66,0]},
+  {t:'L', p:[1,0]}
+];
+function edgeSegs(p0, p1, nx, ny, depth){
+  if(Math.abs(depth) < 0.01) return ` L ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}`;
+  const ux = p1[0]-p0[0], uy = p1[1]-p0[1];
+  const m = (s,d) => [p0[0]+s*ux+d*depth*nx, p0[1]+s*uy+d*depth*ny];
+  let out = '';
+  for(const seg of KNOB){
+    if(seg.t === 'L'){
+      const q = m(seg.p[0], seg.p[1]); out += ` L ${q[0].toFixed(2)} ${q[1].toFixed(2)}`;
+    } else {
+      const c1 = m(seg.c1[0], seg.c1[1]), c2 = m(seg.c2[0], seg.c2[1]), q = m(seg.p[0], seg.p[1]);
+      out += ` C ${c1[0].toFixed(2)} ${c1[1].toFixed(2)} ${c2[0].toFixed(2)} ${c2[1].toFixed(2)} ${q[0].toFixed(2)} ${q[1].toFixed(2)}`;
+    }
+  }
+  return out;
+}
+function pathFor(r,c){
+  const hT = LCH*0.16, vT = LCW*0.16;
+  let d = 'M 0 0';
+  d += edgeSegs([0,0],[LCW,0], 0, 1, hSign(r,c)*hT);      // top (bulge down = +y)
+  d += edgeSegs([LCW,0],[LCW,LCH], 1, 0, vSign(r,c+1)*vT); // right (bulge right = +x)
+  d += edgeSegs([LCW,LCH],[0,LCH], 0, 1, hSign(r+1,c)*hT); // bottom (bulge down = +y)
+  d += edgeSegs([0,LCH],[0,0], 1, 0, vSign(r,c)*vT);       // left (bulge right = +x)
+  return d + ' Z';
+}
+
+function buildGame(){
+  built = true;
+  // slots
+  slotsEl.setAttribute('viewBox', `0 0 ${LW} ${LH}`);
+  slotsEl.setAttribute('preserveAspectRatio','none');
+  slotsEl.innerHTML = '';
+  slotPaths = {};
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const id = r*COLS+c;
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('class','slot');
+    p.setAttribute('data-id', id);
+    p.setAttribute('d', pathFor(r,c));
+    p.setAttribute('transform', `translate(${c*LCW} ${r*LCH})`);
+    slotsEl.appendChild(p);
+    slotPaths[id] = p;
+  }
+  $('.ghost').src = ART_SRC;
+  // pieces
+  pieces = [];
+  const frag = document.createDocumentFragment();
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const id = r*COLS+c;
+    const d = pathFor(r,c);
+    const el = document.createElement('div');
+    el.className = 'piece';
+    el.dataset.id = id;
+    el.setAttribute('role','button');
+    el.setAttribute('aria-label', `Puzzle piece ${id+1} of ${TOTAL}`);
+    el.innerHTML =
+      `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="${(c*LCW-PADX).toFixed(2)} ${(r*LCH-PADY).toFixed(2)} ${(LCW+2*PADX).toFixed(2)} ${(LCH+2*PADY).toFixed(2)}">`+
+        `<defs><clipPath id="clip-${id}"><path d="${d}" transform="translate(${c*LCW} ${r*LCH})"/></clipPath></defs>`+
+        `<image href="${ART_SRC}" x="0" y="0" width="${LW}" height="${LH}" preserveAspectRatio="none" clip-path="url(#clip-${id})"/>`+
+        `<path class="cut" d="${d}" transform="translate(${c*LCW} ${r*LCH})"/>`+
+      `</svg>`;
+    el.addEventListener('pointerdown', onDown);
+    frag.appendChild(el);
+    pieces.push({ id, r, c, el, placed:false, order:id, home:{x:0,y:0,w:0,h:0}, x:0,y:0,w:0,h:0 });
+  }
+  stage.appendChild(frag);
+  shuffle(true);
+}
+
+function shuffle(initial){
+  if(initial){
+    for(let i=pieces.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pieces[i].order,pieces[j].order]=[pieces[j].order,pieces[i].order]; }
+  } else {
+    for(const p of pieces){ p.placed=false; p.el.classList.remove('placed'); slotPaths[p.id].classList.remove('done'); }
+    for(let i=pieces.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pieces[i].order,pieces[j].order]=[pieces[j].order,pieces[i].order]; }
+  }
+  updateProgress();
+  layout();
+}
+
+function layout(){
+  if(!built) return;
+  const W = stage.clientWidth;
+  if(!W) return;
+  const narrow = W < 760;
+  const pad = narrow ? 12 : 18;
+  const gap = narrow ? 7 : 10;
+  const boardW = narrow ? Math.min(W - pad*2, 380) : Math.min(400, W*0.44);
+  const boardH = boardW / ART_RATIO;
+  const cellW = boardW/COLS, cellH = boardH/ROWS;
+  const padPX = cellW*PADK, padPY = cellH*PADK;
+  const fullW = cellW + padPX*2, fullH = cellH + padPY*2;
+  const pieceAspect = fullW/fullH;
+
+  let boardX, boardY, trayX, trayY, trayW, trayH, looseW, looseH, stageH;
+  const labelH = 26, cols = 4, rows = 4;
+
+  if(narrow){
+    boardX = (W - boardW)/2;
+    boardY = pad + 4;
+    trayX = pad; trayW = W - pad*2;
+    const availW = trayW - 24;
+    looseW = Math.min(cellW*0.92, (availW - (cols-1)*gap)/cols);
+    looseH = looseW / pieceAspect;
+    trayH = labelH + rows*looseH + (rows-1)*gap + 14;
+    trayY = boardY + boardH + 30;
+    stageH = trayY + trayH + pad;
+  } else {
+    boardX = pad;
+    trayX = boardX + boardW + 30;
+    trayW = W - trayX - pad;
+    const availW = trayW - 24;
+    looseW = Math.min(cellW*0.9, (availW - (cols-1)*gap)/cols);
+    looseH = looseW / pieceAspect;
+    trayH = labelH + rows*looseH + (rows-1)*gap + 16;
+    stageH = Math.max(boardH + pad*2 + 20, trayH + pad*2);
+    boardY = (stageH - boardH)/2;
+    trayY = (stageH - trayH)/2;
+  }
+
+  stage.style.height = Math.ceil(stageH)+'px';
+  Object.assign(board.style, {left:boardX+'px', top:boardY+'px', width:boardW+'px', height:boardH+'px'});
+  Object.assign(trayEl.style, {left:trayX+'px', top:trayY+'px', width:trayW+'px', height:trayH+'px'});
+
+  geom = {boardX, boardY, boardW, boardH, cellW, cellH, padPX, padPY, fullW, fullH, looseW, looseH, trayX, trayY, trayW, labelH, gap};
+
+  for(const p of pieces){
+    if(p.placed){ placeAt(p, false); }
+    else if(!drag || drag.p !== p){ setLoose(p); }
+  }
+}
+
+function homeFor(p){
+  const col = p.order % 4, row = Math.floor(p.order/4);
+  const g = geom;
+  const gridW = 4*g.looseW + 3*g.gap;
+  const startX = g.trayX + (g.trayW - gridW)/2;
+  const startY = g.trayY + g.labelH + 8;
+  return { x: startX + col*(g.looseW+g.gap), y: startY + row*(g.looseH+g.gap), w: g.looseW, h: g.looseH };
+}
+function targetFor(p){
+  const g = geom;
+  return { x: g.boardX + p.c*g.cellW - g.padPX, y: g.boardY + p.r*g.cellH - g.padPY, w: g.fullW, h: g.fullH };
+}
+function setRect(p, rect){
+  p.x = rect.x; p.y = rect.y; p.w = rect.w; p.h = rect.h;
+  p.el.style.left = rect.x+'px'; p.el.style.top = rect.y+'px';
+  p.el.style.width = rect.w+'px'; p.el.style.height = rect.h+'px';
+}
+function setLoose(p){ p.home = homeFor(p); setRect(p, p.home); }
+function placeAt(p, animate){
+  p.placed = true;
+  p.el.classList.add('placed');
+  p.el.classList.remove('dragging','returning');
+  p.el.style.zIndex = '';
+  setRect(p, targetFor(p));
+  slotPaths[p.id].classList.add('done');
+  p.el.setAttribute('aria-label', `Puzzle piece ${p.id+1} of ${TOTAL}, placed`);
+  if(animate){ p.el.classList.remove('pop'); void p.el.offsetWidth; p.el.classList.add('pop'); }
+}
+
+/* drag */
+function onDown(e){
+  if(e.button !== undefined && e.button !== 0) return;
+  const p = pieces.find(x => x.el === e.currentTarget);
+  if(!p || p.placed || drag) return;
+  e.preventDefault();
+  const ws = stage.getBoundingClientRect();
+  const r = p.el.getBoundingClientRect();
+  const fx = (e.clientX - r.left) / r.width;
+  const fy = (e.clientY - r.top) / r.height;
+  drag = { p, fx, fy };
+  lastPt = {x:e.clientX, y:e.clientY};
+  document.body.classList.add('dragging');
+  p.el.classList.add('dragging');
+  p.el.classList.remove('returning');
+  p.el.style.zIndex = '50';
+  p.w = geom.fullW; p.h = geom.fullH;
+  p.x = e.clientX - ws.left - fx*p.w;
+  p.y = e.clientY - ws.top - fy*p.h;
+  setRect(p, {x:p.x, y:p.y, w:p.w, h:p.h});
+  if(p.el.setPointerCapture){ try{ p.el.setPointerCapture(e.pointerId); }catch(err){} }
+  window.addEventListener('pointermove', onMove, {passive:false});
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  if(!rafId) rafId = requestAnimationFrame(scrollTick);
+}
+function onMove(e){
+  if(!drag) return;
+  e.preventDefault();
+  lastPt = {x:e.clientX, y:e.clientY};
+  updateDragPos();
+  const vh = window.innerHeight;
+  autoDir = e.clientY < 80 ? -1 : (e.clientY > vh-80 ? 1 : 0);
+}
+function updateDragPos(){
+  const d = drag; if(!d) return;
+  const ws = stage.getBoundingClientRect();
+  let x = lastPt.x - ws.left - d.fx*d.p.w;
+  let y = lastPt.y - ws.top - d.fy*d.p.h;
+  x = Math.max(-d.p.w*0.35, Math.min(stage.clientWidth - d.p.w*0.65, x));
+  y = Math.max(-d.p.h*0.35, Math.min(stage.clientHeight - d.p.h*0.65, y));
+  setRect(d.p, {x, y, w:d.p.w, h:d.p.h});
+}
+function scrollTick(){
+  if(!drag){ rafId = null; return; }
+  if(autoDir){ window.scrollBy(0, autoDir*14); updateDragPos(); }
+  rafId = requestAnimationFrame(scrollTick);
+}
+function onUp(){
+  const d = drag; if(!d) return;
+  drag = null; autoDir = 0;
+  document.body.classList.remove('dragging');
+  window.removeEventListener('pointermove', onMove);
+  window.removeEventListener('pointerup', onUp);
+  window.removeEventListener('pointercancel', onUp);
+  const p = d.p;
+  p.el.classList.remove('dragging');
+  p.el.style.zIndex = '';
+  const g = geom;
+  const cx = g.boardX + (p.c+0.5)*g.cellW;
+  const cy = g.boardY + (p.r+0.5)*g.cellH;
+  const hit = Math.abs((p.x + p.w/2) - cx) < g.cellW*0.7 && Math.abs((p.y + p.h/2) - cy) < g.cellH*0.7;
+  if(hit){ placeAt(p, true); updateProgress(); }
+  else { returnHome(p); }
+}
+function returnHome(p){
+  p.el.classList.add('returning');
+  requestAnimationFrame(() => setRect(p, p.home));
+  setTimeout(() => p.el.classList.remove('returning'), 260);
+}
+
+function updateProgress(){
+  const n = pieces.filter(p => p.placed).length;
+  countEl.textContent = `${n} / ${TOTAL} pieces`;
+  barEl.style.width = `${(n/TOTAL)*100}%`;
+  msgEl.textContent = n === TOTAL ? 'Every piece found its place!' : (n%4===0 ? `${n} pieces together — lovely work!` : 'Lovely, that one fits!');
+  if(n === TOTAL) setTimeout(finish, 650);
+}
+
+/* hint */
+function hint(){
+  const p = pieces.find(x => !x.placed);
+  if(!p) return;
+  p.el.classList.remove('hint'); void p.el.offsetWidth; p.el.classList.add('hint');
+  const sp = slotPaths[p.id];
+  sp.classList.remove('hint'); void sp.getBoundingClientRect(); sp.classList.add('hint');
+  msgEl.textContent = `This piece belongs where the glowing outline is ✦`;
+  if(!reduceMotion) p.el.scrollIntoView({block:'nearest', behavior:'smooth'});
+  setTimeout(() => { p.el.classList.remove('hint'); sp.classList.remove('hint'); }, 1700);
+}
+
+function finish(){
+  show('final');
+  if(reduceMotion) return;
+  const glyphs = ['✦','♡','✧','•'];
+  const colors = ['#fff8dc','#efc5c1','#69b5c1','#d6b85e','#f7d9d1'];
+  for(let i=0;i<70;i++){
+    const s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = glyphs[i%glyphs.length];
+    s.style.left = Math.random()*100+'vw';
+    s.style.fontSize = (0.7+Math.random()*0.9)+'rem';
+    s.style.color = colors[i%colors.length];
+    s.style.animationDuration = (2.6+Math.random()*2.4)+'s';
+    s.style.animationDelay = (Math.random()*0.9)+'s';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 6000);
+  }
+}
+
+/* buttons / lifecycle */
+$('#openGameBtn').addEventListener('click', () => {
+  show('game');
+  if(!built) buildGame();
+  else requestAnimationFrame(layout);
+});
+$('#hintBtn').addEventListener('click', hint);
+$('#resetBtn').addEventListener('click', () => {
+  if(confirm('Start over? All pieces will return to the table.')) shuffle(false);
+});
+$('#againBtn').addEventListener('click', () => location.reload());
+
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => {
+    if(built && document.getElementById('game').classList.contains('active')){
+      if(drag){ drag=null; autoDir=0; document.body.classList.remove('dragging'); }
+      layout();
+    }
+  }, 140);
+});
+
+/* load image -> set aspect -> (re)build if needed */
+art.onload = () => {
+  ART_RATIO = art.naturalWidth / art.naturalHeight;
+  LH = LW / ART_RATIO; LCW = LW/COLS; LCH = LH/ROWS;
+  PADX = LCW*PADK; PADY = LCH*PADK;
+  if(built){ buildGame(); } // rebuild with correct aspect
+};
+art.onerror = () => { /* fallback ratio stays */ };
+
+})();
+</script>
+</body>
+</html>
